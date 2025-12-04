@@ -6,38 +6,49 @@ export function Rect(
     ctx: CanvasRenderingContext2D,
     roomId: string,
     addShape: (shape: Shape) => void,
-    cleanAndRedraw: () => void
+    cleanAndRedraw: () => void,
+    screenToWorld: (e:MouseEvent) => {x: number,y:number},
+    getCamera: () => {x: number, y: number,zoom: number}
 ) {
     let clicked = false
     let startX = 0;
     let startY = 0;
     let isActive = true;
-    
+
     const handleMouseDown = (e: MouseEvent) => {
         if (!isActive) return;
-        const rect = canvas.getBoundingClientRect();  
-        e.preventDefault(); 
         clicked = true
-        startX = e.clientX - rect.left
-        startY = e.clientY - rect.top
+        const p = screenToWorld(e)
+        startX = p.x
+        startY = p.y
     }
-    
+
     const handleMouseMove = (e: MouseEvent) => {
         if (!isActive || !clicked) return;
-        const rect = canvas.getBoundingClientRect();
-        const width = (e.clientX - rect.left) - startX;
-        const height = (e.clientY - rect.top) - startY;
+        const p = screenToWorld(e);
+        const width = p.x - startX;
+        const height = p.y - startY;
+        
         cleanAndRedraw();
-        ctx.strokeStyle = "rgba(255,255,255)"
-        ctx.strokeRect(startX, startY, width, height)
+        
+        const dpr = window.devicePixelRatio || 1;
+        const camera = getCamera();
+        ctx.save();
+        ctx.setTransform(dpr*camera.zoom, 0, 0, dpr*camera.zoom, -camera.x * dpr*camera.zoom, -camera.y * dpr*camera.zoom);
+        
+        ctx.strokeStyle = "rgba(255,255,255)";
+        ctx.strokeRect(startX, startY, width, height);
+        
+        ctx.restore();
     }
-    
+
     const handleMouseUp = (e: MouseEvent) => {
         if (!isActive || !clicked) return;
-        const rect = canvas.getBoundingClientRect();
         clicked = false
-        const width = (e.clientX - rect.left) - startX;
-        const height = (e.clientY - rect.top) - startY;  
+        const p = screenToWorld(e);
+        const width = p.x - startX;
+        const height = p.y - startY;  
+        
         const shape: Shape = {
             type: "rect",
             x: startX,
@@ -52,11 +63,11 @@ export function Rect(
             message: JSON.stringify(shape)
         }))
     }
-    
+
     canvas.addEventListener("mousedown", handleMouseDown)
     canvas.addEventListener("mousemove", handleMouseMove)
     window.addEventListener("mouseup", handleMouseUp)
-    
+
     return () => {
         isActive = false;
         clicked = false;
