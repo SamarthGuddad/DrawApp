@@ -5,7 +5,6 @@ export function Circle(
     socket: WebSocket,
     ctx: CanvasRenderingContext2D,
     roomId: string,
-    addShape: (shape: Shape) => void,
     cleanAndRedraw: () => void,
     screenToWorld: (e: MouseEvent) => {x: number,y: number},
     getCamera: () => {x: number, y: number,zoom: number}
@@ -63,12 +62,25 @@ export function Circle(
             centerY: startY,
             radius
         }
+
+        const messageObj = {
+            type: "create",
+            roomId: roomId,
+            shape: shape
+        };
         
-        socket.send(JSON.stringify({
-            type: "chat",
-            roomId,
-            message: JSON.stringify(shape)
-        }))
+        try {
+      const messageStr = JSON.stringify(messageObj);
+
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(messageStr);
+        console.log('Message sent successfully');
+      } else {
+        console.error('WebSocket not open. ReadyState:', socket.readyState);
+      }
+    } catch (error) {
+      console.error('Error stringifying or sending message:', error);
+    }
     }
 
     canvas.addEventListener("mousedown", handleMouseDown)

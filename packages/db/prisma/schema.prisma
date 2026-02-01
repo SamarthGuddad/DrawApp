@@ -16,6 +16,8 @@ model User {
   photo         String?
   rooms         Room[]
   chats         Chat[]
+
+  updatedAt     DateTime?    @updatedAt
 }
 
 model Room {
@@ -25,6 +27,9 @@ model Room {
   adminId     String
   admin       User      @relation(fields: [adminId], references: [id])
   chats       Chat[]
+
+  canvasState   Json        @default("[]")
+  updatedAt     DateTime?    @updatedAt
 }
 
 model Chat {

@@ -7,7 +7,7 @@ export function Canvas({ roomId, socket }: { roomId: string; socket: WebSocket }
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<any>(null);
 
-  const [shapeType, setShapeType] = useState<"rect" | "circle" | "pan">("rect");
+  const [shapeType, setShapeType] = useState<"rect" | "circle" | "pan" | "click" | "line">("rect");
   const shapeTypeRef = useRef(shapeType);
   useEffect(() => {
     shapeTypeRef.current = shapeType;
@@ -26,8 +26,7 @@ export function Canvas({ roomId, socket }: { roomId: string; socket: WebSocket }
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
 
-      const ctx = canvas.getContext("2d");
-      if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);        
+      engineRef.current?.selectShape?.();      
     }
 
     resize();
@@ -88,13 +87,15 @@ export function Canvas({ roomId, socket }: { roomId: string; socket: WebSocket }
         <button onClick={() => setShapeType("rect")}>Rectangle</button>
         <button onClick={() => setShapeType("circle")}>Circle</button>
         <button onClick={() => setShapeType("pan")}>Move</button>
+        <button onClick={() => setShapeType("click")}>Select</button>
+        <button onClick={() => setShapeType("line")}>Line</button>
       </div>
 
       <canvas
         ref={canvasRef}
         style={{
           display: "block",
-          cursor: shapeType === "pan" ? "grab" : "crosshair",
+          cursor: shapeType === "pan" ? "grab" : shapeType === "click" ? "default" : "crosshair",
           width: "100%",
           height: "100%",
         }}
