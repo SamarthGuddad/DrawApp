@@ -11,12 +11,13 @@ import { Click } from "./Click"
 import { Line } from "./Line"
 import { Pencil } from "./Pencil"
 import { Text } from "./Text"
+import { Eraser } from "./Eraser"
 
 export function InitDraw(
     canvas: HTMLCanvasElement,
     roomId: string,
     socket: WebSocket,
-    shapeType: () => "rect" | "circle" | "pan" | "click" | "line" | "pencil" | "text"
+    shapeType: () => "rect" | "circle" | "pan" | "click" | "line" | "pencil" | "text" | "eraser"
 ) {
     const ctx = canvas.getContext("2d")
     if(!ctx) {
@@ -116,6 +117,10 @@ export function InitDraw(
         }
         else if( shape === "text"){
             cleanUpTool = Text(canvas,socket,ctx,roomId,cleanAndRedraw,screenToWorld,() => camera)
+        }
+        else if(shape === "eraser"){
+            cleanUpTool = Eraser(canvas,ctx,() => existingShapes,(shapes) => existingShapes = shapes,cleanAndRedraw,screenToWorld
+                                ,() => camera,handleShapeDeleted)
         }
     }
 

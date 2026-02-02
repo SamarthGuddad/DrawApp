@@ -7,7 +7,7 @@ export function Canvas({ roomId, socket }: { roomId: string; socket: WebSocket }
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<any>(null);
 
-  const [shapeType, setShapeType] = useState<"rect" | "circle" | "pan" | "click" | "line" | "pencil" | "text">("rect");
+  const [shapeType, setShapeType] = useState<"rect" | "circle" | "pan" | "click" | "line" | "pencil" | "text" | "eraser">("rect");
   const shapeTypeRef = useRef(shapeType);
   useEffect(() => {
     shapeTypeRef.current = shapeType;
@@ -91,6 +91,7 @@ export function Canvas({ roomId, socket }: { roomId: string; socket: WebSocket }
         <button onClick={() => setShapeType("line")}>Line</button>
         <button onClick={() => setShapeType("pencil")}>Pencil</button>
         <button onClick={() => setShapeType("text")}>Text</button>
+        <button onClick={() => setShapeType("eraser")}>Eraser</button>
       </div>
 
       <canvas
