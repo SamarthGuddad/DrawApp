@@ -9,12 +9,13 @@ import { Zoom } from "./Zoom"
 import { UndoRedoManager } from "./UndoRedo"
 import { Click } from "./Click"
 import { Line } from "./Line"
+import { Pencil } from "./Pencil"
 
 export function InitDraw(
     canvas: HTMLCanvasElement,
     roomId: string,
     socket: WebSocket,
-    shapeType: () => "rect" | "circle" | "pan" | "click" | "line"
+    shapeType: () => "rect" | "circle" | "pan" | "click" | "line" | "pencil"
 ) {
     const ctx = canvas.getContext("2d")
     if(!ctx) {
@@ -108,6 +109,9 @@ export function InitDraw(
         }
         else if(shape === "line"){
             cleanUpTool = Line(canvas,socket,ctx,roomId,cleanAndRedraw,screenToWorld,() => camera)
+        }
+        else if(shape === "pencil"){
+            cleanUpTool = Pencil(canvas,socket,ctx,roomId,cleanAndRedraw,screenToWorld,() => camera)
         }
     }
 
@@ -232,7 +236,7 @@ function clearCanvas(
     ctx.setTransform(dpr*camera.zoom, 0, 0, dpr*camera.zoom, -camera.x * dpr*camera.zoom, -camera.y * dpr*camera.zoom);
                                     
     if (shapes && Array.isArray(shapes)) {
-        shapes.forEach(shape => drawShape(ctx, shape));
+        shapes.forEach(shape => drawShape(ctx, shape,() => camera));
     }
 }
 

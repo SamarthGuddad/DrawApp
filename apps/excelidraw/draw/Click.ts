@@ -16,6 +16,7 @@ export function Click(
     let dragStartWorld = {x: 0,y: 0};
     let shapeStartPos = {x: 0,y: 0};
     let shapeStartPos2 = {x: 0,y: 0};
+    let pencilOrignalPoints: {x: number,y: number}[] = []
     let mouseDownPos = {x: 0,y: 0};
     let hasMoved = false;
     let isActive = true;
@@ -32,6 +33,10 @@ export function Click(
         mouseDownPos = {x: e.clientX,y: e.clientY};
         hasMoved = false;
         isDragging = false;
+
+        shapeStartPos = {x: 0, y: 0};
+        shapeStartPos2 = {x: 0, y: 0};
+        pencilOrignalPoints = [];
 
         let hitIndex = -1;
 
@@ -56,6 +61,9 @@ export function Click(
             else if(shape.type === "line"){
                 shapeStartPos = {x: shape.x1,y: shape.y1};
                 shapeStartPos2 = {x: shape.x2,y: shape.y2}
+            }
+            else if(shape.type === "pencil"){
+                pencilOrignalPoints = shape.points.map(p => ({x: p.x,y: p.y}))
             }
 
 
@@ -121,6 +129,17 @@ export function Click(
                     y2: shapeStartPos2.y + dy
                 }
             }
+            else if(shape.type === "pencil"){
+                const movedPoints = pencilOrignalPoints.map(p => ({
+                    x: p.x + dx,
+                    y: p.y + dy
+                }));
+
+                updatedShapes[selectedIndex] = {
+                    type: "pencil",
+                    points: movedPoints
+                }
+            }
 
             setShapes(updatedShapes);
             cleanAndRedraw();
@@ -153,6 +172,10 @@ export function Click(
 
         isDragging = false; 
         hasMoved = false;
+
+        shapeStartPos = {x: 0, y: 0};
+        shapeStartPos2 = {x: 0, y: 0};
+        pencilOrignalPoints = []
 
         if(selectedIndex !== -1){
             cleanAndRedraw();
@@ -210,6 +233,16 @@ export function Click(
             ctx.lineTo(shape.x2,shape.y2)
             ctx.stroke();
         }
+        else if(shape.type === "pencil"){
+            if(shape.points.length > 1){
+                ctx.beginPath();
+                ctx.moveTo(shape.points[0].x, shape.points[0].y);
+                for (let i = 1; i < shape.points.length; i++){
+                    ctx.lineTo(shape.points[i].x, shape.points[i].y);
+                }
+                ctx.stroke()
+            }
+        }
 
         ctx.restore();
     }
@@ -239,67 +272,100 @@ function isPointInShape(
   const tolerance = 8 / zoom;
 
   if (shape.type === "rect") {
-    let { x, y, width, height } = shape;
-    
-    if (width < 0) {
-      x = x + width;
-      width = Math.abs(width);
-    }
-    if (height < 0) {
-      y = y + height;
-      height = Math.abs(height);
-    }
-    
-    const inOuterBounds = 
-      point.x >= x - tolerance &&
-      point.x <= x + width + tolerance &&
-      point.y >= y - tolerance &&
-      point.y <= y + height + tolerance;
-    
-    if (!inOuterBounds) {
-      return false;
-    }
-    
-    if (width <= 2 * tolerance || height <= 2 * tolerance) {
-      return true;
-    }
-    
-    const inInnerBounds = 
-      point.x > x + tolerance &&
-      point.x < x + width - tolerance &&
-      point.y > y + tolerance &&
-      point.y < y + height - tolerance;
-    
-    return !inInnerBounds;
+            let { x, y, width, height } = shape;
+            
+            if (width < 0) {
+            x = x + width;
+            width = Math.abs(width);
+            }
+            if (height < 0) {
+            y = y + height;
+            height = Math.abs(height);
+            }
+            
+            const inOuterBounds = 
+            point.x >= x - tolerance &&
+            point.x <= x + width + tolerance &&
+            point.y >= y - tolerance &&
+            point.y <= y + height + tolerance;
+            
+            if (!inOuterBounds) {
+            return false;
+            }
+            
+            if (width <= 2 * tolerance || height <= 2 * tolerance) {
+            return true;
+            }
+            
+            const inInnerBounds = 
+            point.x > x + tolerance &&
+            point.x < x + width - tolerance &&
+            point.y > y + tolerance &&
+            point.y < y + height - tolerance;
+            
+            return !inInnerBounds;
     
   } else if (shape.type === "circle") {
-    const dx = point.x - shape.centerX;
-    const dy = point.y - shape.centerY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    return Math.abs(distance - shape.radius) <= tolerance;
+            const dx = point.x - shape.centerX;
+            const dy = point.y - shape.centerY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            return Math.abs(distance - shape.radius) <= tolerance;
   }
   else if (shape.type === "line") {
-    const { x1, y1, x2, y2 } = shape;
-    
-    const lineLength = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-    
-    if (lineLength < 0.01) {
-      const dx = point.x - x1;
-      const dy = point.y - y1;
-      return Math.sqrt(dx * dx + dy * dy) <= tolerance;
-    }
-    
-    const distance = Math.abs(
-      (y2 - y1) * point.x - (x2 - x1) * point.y + x2 * y1 - y2 * x1
-    ) / lineLength;
-    
-    const dotProduct = 
-      ((point.x - x1) * (x2 - x1) + (point.y - y1) * (y2 - y1)) / (lineLength * lineLength);
-    
-    const isWithinSegment = dotProduct >= 0 && dotProduct <= 1;
-    
-    return distance <= tolerance && isWithinSegment;
+            const { x1, y1, x2, y2 } = shape;
+            
+            const lineLength = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+            
+            if (lineLength < 0.01) {
+            const dx = point.x - x1;
+            const dy = point.y - y1;
+            return Math.sqrt(dx * dx + dy * dy) <= tolerance;
+            }
+            
+            const distance = Math.abs(
+            (y2 - y1) * point.x - (x2 - x1) * point.y + x2 * y1 - y2 * x1
+            ) / lineLength;
+            
+            const dotProduct = 
+            ((point.x - x1) * (x2 - x1) + (point.y - y1) * (y2 - y1)) / (lineLength * lineLength);
+            
+            const isWithinSegment = dotProduct >= 0 && dotProduct <= 1;
+            
+            return distance <= tolerance && isWithinSegment;
+  }
+  else if(shape.type === "pencil"){
+            if(shape.points.length < 2){
+                return false
+            }
+
+            for(let i = 0; i < shape.points.length - 1; i++){
+                const x1 = shape.points[i].x;
+                const y1 = shape.points[i].y;
+                const x2 = shape.points[i + 1].x;
+                const y2 = shape.points[i + 1].y;
+
+                const lineLength = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+
+                if (lineLength < 0.01) {
+                    const dx = point.x - x1;
+                    const dy = point.y - y1;
+                    if (Math.sqrt(dx * dx + dy * dy) <= tolerance) {
+                        return true;
+                    }
+                    continue;
+                }
+
+                const distance = Math.abs((y2 - y1) * point.x - (x2 - x1) * point.y + x2 * y1 - y2 * x1) / lineLength;
+                
+                const dotProduct = ((point.x - x1) * (x2 - x1) + (point.y - y1) * (y2 - y1)) / (lineLength * lineLength);
+                
+                const isWithinSegment = dotProduct >= 0 && dotProduct <= 1;
+                
+                if (distance <= tolerance && isWithinSegment) {
+                    return true;
+                }
+            }
   }
 
   return false;

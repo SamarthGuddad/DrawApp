@@ -18,4 +18,8 @@ export type Shape = {
     y1: number,
     x2: number,
     y2: number
+} | 
+{
+    type: "pencil",
+    points: {x: number,y: number}[]
 }
