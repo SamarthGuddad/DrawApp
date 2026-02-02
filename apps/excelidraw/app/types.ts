@@ -22,4 +22,11 @@ export type Shape = {
 {
     type: "pencil",
     points: {x: number,y: number}[]
+} | 
+{
+    type: "text",
+    x: number,
+    y: number,
+    content: string,
+    fontSize: number
 }

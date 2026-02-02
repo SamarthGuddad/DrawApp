@@ -41,7 +41,7 @@ export function Click(
         let hitIndex = -1;
 
         for (let i = shapes.length - 1; i >= 0; i--) {
-            if (isPointInShape(worldPos, shapes[i],camera.zoom)) {
+            if (isPointInShape(worldPos, shapes[i],camera.zoom,ctx,camera)) {
                 hitIndex = i;
                 break;
             }
@@ -64,6 +64,9 @@ export function Click(
             }
             else if(shape.type === "pencil"){
                 pencilOrignalPoints = shape.points.map(p => ({x: p.x,y: p.y}))
+            }
+            else if(shape.type === "text"){
+                shapeStartPos = {x: shape.x, y: shape.y};
             }
 
 
@@ -140,6 +143,15 @@ export function Click(
                     points: movedPoints
                 }
             }
+            else if(shape.type === "text"){
+                updatedShapes[selectedIndex] = {
+                    type: "text",
+                    x: shapeStartPos.x + dx,
+                    y: shapeStartPos.y + dy,
+                    content: shape.content,
+                    fontSize: shape.fontSize
+                }
+            }
 
             setShapes(updatedShapes);
             cleanAndRedraw();
@@ -151,7 +163,7 @@ export function Click(
             let hovering = false;
 
             for(let i=shapes.length - 1; i >= 0; i--){
-                if(isPointInShape(worldPos,shapes[i],camera.zoom)){
+                if(isPointInShape(worldPos,shapes[i],camera.zoom,ctx,camera)){
                     hovering = true;
                     break;
                 }
@@ -243,6 +255,16 @@ export function Click(
                 ctx.stroke()
             }
         }
+        else if(shape.type === "text"){
+            const camera = getCamera();
+            ctx.font = `${shape.fontSize / camera.zoom}px Arial`;
+            ctx.textBaseline = "top";
+            const metrics = ctx.measureText(shape.content);
+            const width = metrics.width;
+            const height = shape.fontSize / camera.zoom;
+            
+            ctx.strokeRect(shape.x - 2/camera.zoom, shape.y - 2/camera.zoom, width + 4/camera.zoom, height + 4/camera.zoom);
+        }
 
         ctx.restore();
     }
@@ -267,7 +289,10 @@ export function Click(
 function isPointInShape(
   point: {x: number, y: number},
   shape: Shape,
-  zoom: number
+  zoom: number,
+  ctx: CanvasRenderingContext2D,
+  getCamera: {x: number,y: number, zoom: number
+  }
 ): boolean {
   const tolerance = 8 / zoom;
 
@@ -366,6 +391,21 @@ function isPointInShape(
                     return true;
                 }
             }
+  }
+  else if(shape.type === "text"){
+            const camera = getCamera
+            ctx.font = `${shape.fontSize / camera.zoom}px Arial`;
+            ctx.textBaseline = "top";
+            const metrics = ctx.measureText(shape.content);
+            const width = metrics.width;
+            const height = shape.fontSize / camera.zoom;
+            
+            return (
+                point.x >= shape.x &&
+                point.x <= shape.x + width &&
+                point.y >= shape.y &&
+                point.y <= shape.y + height
+            );
   }
 
   return false;

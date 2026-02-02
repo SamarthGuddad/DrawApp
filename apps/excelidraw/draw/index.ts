@@ -10,12 +10,13 @@ import { UndoRedoManager } from "./UndoRedo"
 import { Click } from "./Click"
 import { Line } from "./Line"
 import { Pencil } from "./Pencil"
+import { Text } from "./Text"
 
 export function InitDraw(
     canvas: HTMLCanvasElement,
     roomId: string,
     socket: WebSocket,
-    shapeType: () => "rect" | "circle" | "pan" | "click" | "line" | "pencil"
+    shapeType: () => "rect" | "circle" | "pan" | "click" | "line" | "pencil" | "text"
 ) {
     const ctx = canvas.getContext("2d")
     if(!ctx) {
@@ -113,6 +114,9 @@ export function InitDraw(
         else if(shape === "pencil"){
             cleanUpTool = Pencil(canvas,socket,ctx,roomId,cleanAndRedraw,screenToWorld,() => camera)
         }
+        else if( shape === "text"){
+            cleanUpTool = Text(canvas,socket,ctx,roomId,cleanAndRedraw,screenToWorld,() => camera)
+        }
     }
 
     function handleShapeMoved(shapes: Shape[]){
@@ -144,6 +148,11 @@ export function InitDraw(
 
     function setupKeyboardShortcuts(){
         const handleKeyDown = (e: KeyboardEvent) => {
+            if(document.activeElement?.tagName === 'INPUT' || 
+                document.activeElement?.tagName === 'TEXTAREA'){
+                return;
+            }
+            
             if((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey){
                 e.preventDefault();
                 handleUndo();

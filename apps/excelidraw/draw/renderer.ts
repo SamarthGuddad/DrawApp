@@ -37,6 +37,14 @@ export function drawShape(ctx: CanvasRenderingContext2D,shape: Shape,getCamera: 
             ctx.stroke()
         }
     }
+    else if(shape.type === "text"){
+        const camera = getCamera();
+
+        ctx.fillStyle = "white";
+        ctx.font = `${shape.fontSize / camera.zoom}px Arial`
+        ctx.textBaseline = "top";
+        ctx.fillText(shape.content, shape.x, shape.y);
+    }
 
     ctx.restore()    
 }   
